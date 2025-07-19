@@ -1,0 +1,35 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.SchoolRunner" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/secondary</item>
+        <item name="colorAccent">@color/accent</item>
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/primary</item>
+        <!-- Status bar text color -->
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- Remove all button shadow effects -->
+        <item name="materialButtonStyle">@style/Widget.App.Button.NoElevation</item>
+        <!-- Force opt-out of edge-to-edge mode enforcement -->
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:ignore="NewApi">true</item>
+        <!-- Set default background color -->
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+
+    <!-- Custom button style without shadow -->
+    <style name="Widget.App.Button.NoElevation" parent="Widget.MaterialComponents.Button">
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:padding">0dp</item>
+    </style>
+
+    <!-- Bottom Navigation Text Style -->
+    <style name="BottomNavigationTextStyle">
+        <item name="android:textSize">10sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+</resources>
