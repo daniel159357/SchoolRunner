@@ -98,6 +98,6 @@ To create a signed APK for release:
 
 ## Contact
 
-Daniel TAM - [yunlam159@gmail.com](mailto:yunlam159@gmail.com)
+[yunlam159@gmail.com](mailto:yunlam159@gmail.com)
 
 Project Link: [https://github.com/daniel159357/SchoolRunner](https://github.com/daniel159357/SchoolRunner)
