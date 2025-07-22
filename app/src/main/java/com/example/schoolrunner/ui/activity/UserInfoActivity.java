@@ -26,6 +26,8 @@ public class UserInfoActivity extends AppCompatActivity {
     private TextView tvSave;
     private EditText etName;
     private EditText etStudentNo;
+    private TextView tvPublisherScore;
+    private TextView tvRunnerScore;
 
     private Student currentStudent;
 
@@ -39,11 +41,24 @@ public class UserInfoActivity extends AppCompatActivity {
         initListener();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        try {
+            currentStudent = CurrentStudentUtils.getCurrentStudent();
+            updateUI();
+        } catch (Exception e) {
+            // 可选：显示错误提示或处理异常
+        }
+    }
+
     private void initView() {
         ivBack = findViewById(R.id.iv_back);
         tvSave = findViewById(R.id.tv_save);
         etName = findViewById(R.id.et_name);
         etStudentNo = findViewById(R.id.et_student_no);
+        tvPublisherScore = findViewById(R.id.tv_publisher_score);
+        tvRunnerScore = findViewById(R.id.tv_runner_score);
     }
 
     private void initData() {
@@ -55,6 +70,7 @@ public class UserInfoActivity extends AppCompatActivity {
             if (currentStudent != null) {
                 etName.setText(currentStudent.getName());
                 etStudentNo.setText(currentStudent.getStudentNo());
+                updateUI();
             }
         } catch (Exception e) {
             Toast.makeText(this, "Failed to get user information: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -114,6 +130,23 @@ public class UserInfoActivity extends AppCompatActivity {
                 finish();
             } else {
                 Toast.makeText(this, result.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void updateUI() {
+        if (currentStudent != null) {
+            android.util.Log.d("UserInfo", "Publisher avg: " + currentStudent.getAveragePublisherScore());
+            android.util.Log.d("UserInfo", "Runner avg: " + currentStudent.getAverageRunnerScore());
+            if (currentStudent.getAveragePublisherScore() != null) {
+                tvPublisherScore.setText(String.format("%.1f", currentStudent.getAveragePublisherScore()));
+            } else {
+                tvPublisherScore.setText("no grade");
+            }
+            if (currentStudent.getAverageRunnerScore() != null) {
+                tvRunnerScore.setText(String.format("%.1f", currentStudent.getAverageRunnerScore()));
+            } else {
+                tvRunnerScore.setText("no grade");
             }
         }
     }

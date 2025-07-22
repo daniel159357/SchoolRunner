@@ -94,6 +94,23 @@ public class Order {
      */
     private Date updateTime;
 
+    /**
+     * Time when the order was received
+     */
+    private Date receivedTime;
+
+    /**
+     * Time when the order was completed
+     */
+    private Date completedTime;
+
+    private Double publisherScore; // 发布人对接单人的评分
+    private String publisherComment; // 发布人对接单人的评价
+    private Double runnerScore; // 接单人对发布人的评分
+    private String runnerComment; // 接单人对发布人的评价
+    private Integer runnerLimitType; // 0=所有人，1=新人或高分，2=仅高分
+    private Double minRunnerScore; // 最低评分
+
     public Long getId() {
         return id;
     }
@@ -229,4 +246,49 @@ public class Order {
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
+
+    public Date getReceivedTime() {
+        return receivedTime;
+    }
+
+    public void setReceivedTime(Date receivedTime) {
+        this.receivedTime = receivedTime;
+    }
+
+    public Date getCompletedTime() {
+        return completedTime;
+    }
+
+    public void setCompletedTime(Date completedTime) {
+        this.completedTime = completedTime;
+    }
+
+    public Double getPublisherScore() {
+        return publisherScore;
+    }
+    public void setPublisherScore(Double publisherScore) {
+        this.publisherScore = publisherScore;
+    }
+    public String getPublisherComment() {
+        return publisherComment;
+    }
+    public void setPublisherComment(String publisherComment) {
+        this.publisherComment = publisherComment;
+    }
+    public Double getRunnerScore() {
+        return runnerScore;
+    }
+    public void setRunnerScore(Double runnerScore) {
+        this.runnerScore = runnerScore;
+    }
+    public String getRunnerComment() {
+        return runnerComment;
+    }
+    public void setRunnerComment(String runnerComment) {
+        this.runnerComment = runnerComment;
+    }
+    public Integer getRunnerLimitType() { return runnerLimitType; }
+    public void setRunnerLimitType(Integer runnerLimitType) { this.runnerLimitType = runnerLimitType; }
+    public Double getMinRunnerScore() { return minRunnerScore; }
+    public void setMinRunnerScore(Double minRunnerScore) { this.minRunnerScore = minRunnerScore; }
 }

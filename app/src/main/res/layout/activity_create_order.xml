@@ -320,6 +320,51 @@
                     android:textColor="#999999"
                     android:textSize="12sp" />
             </LinearLayout>
+
+            <RadioGroup
+                android:id="@+id/rg_runner_limit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+                <RadioButton
+                    android:id="@+id/rb_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Allow all runners"
+                    android:checked="true"/>
+                <RadioButton
+                    android:id="@+id/rb_new_or_high"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Only allow new runners (no grade) or runners with score ≥ X"/>
+                <RadioButton
+                    android:id="@+id/rb_high_only"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Only allow runners with score ≥ X"/>
+            </RadioGroup>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Min runner score (X, 1<=X<=5): "
+                    android:textColor="#666"
+                    android:textSize="14sp"/>
+                <EditText
+                    android:id="@+id/et_min_runner_score"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:hint="0-5"
+                    android:textSize="14sp"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

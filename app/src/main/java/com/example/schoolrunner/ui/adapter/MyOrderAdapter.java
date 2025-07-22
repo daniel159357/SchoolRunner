@@ -115,6 +115,11 @@ public class MyOrderAdapter extends RecyclerView.Adapter<MyOrderAdapter.ViewHold
             public void onClick(View v) {
                 Intent intent = new Intent(context, OrderDetailActivity.class);
                 intent.putExtra("orderId", order.getId());
+                if (isMyPublish) {
+                    intent.putExtra("viewRole", "publisher");
+                } else {
+                    intent.putExtra("viewRole", "runner");
+                }
                 context.startActivity(intent);
             }
         });
@@ -231,6 +236,11 @@ public class MyOrderAdapter extends RecyclerView.Adapter<MyOrderAdapter.ViewHold
                     public void onClick(View v) {
                         Intent intent = new Intent(context, OrderDetailActivity.class);
                         intent.putExtra("orderId", order.getId());
+                        if (isMyPublish) {
+                            intent.putExtra("viewRole", "publisher");
+                        } else {
+                            intent.putExtra("viewRole", "runner");
+                        }
                         context.startActivity(intent);
                     }
                 });
@@ -258,6 +268,11 @@ public class MyOrderAdapter extends RecyclerView.Adapter<MyOrderAdapter.ViewHold
                     public void onClick(View v) {
                         Intent intent = new Intent(context, OrderDetailActivity.class);
                         intent.putExtra("orderId", order.getId());
+                        if (isMyPublish) {
+                            intent.putExtra("viewRole", "publisher");
+                        } else {
+                            intent.putExtra("viewRole", "runner");
+                        }
                         context.startActivity(intent);
                     }
                 });

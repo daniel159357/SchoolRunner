@@ -88,18 +88,25 @@ public class StudentDao {
         if (studentId == null) {
             return new Result<>(false, "Student ID cannot be null", null);
         }
-        Cursor cursor = SqliteUtils.getInstance().getReadableDatabase().query("tb_student", null, "id=?", new String[]{String.valueOf(studentId)}, null, null, null);
-        if (cursor.moveToNext()) {
+        Cursor cursor = SqliteUtils.getInstance().getReadableDatabase().query(
+                "tb_student", null, "id=?", new String[]{String.valueOf(studentId)}, null, null, null);
+        if (cursor.moveToFirst()) {
             Student student = new Student();
             student.setId(cursor.getLong(cursor.getColumnIndex("id")));
             student.setStudentNo(cursor.getString(cursor.getColumnIndex("student_no")));
             student.setPassword(cursor.getString(cursor.getColumnIndex("password")));
             student.setName(cursor.getString(cursor.getColumnIndex("name")));
+            // 关键：赋值平均分
+            Double pubAvg = getAveragePublisherScore(studentId);
+            Double runAvg = getAverageRunnerScore(studentId);
+            android.util.Log.d("StudentDao", "getByStudentId pubAvg=" + pubAvg + ", runAvg=" + runAvg);
+            student.setAveragePublisherScore(pubAvg);
+            student.setAverageRunnerScore(runAvg);
             cursor.close();
             return new Result<>(true, "Query successful", student);
         }
         cursor.close();
-        return new Result<>(false, "Account does not exist", null);
+        return new Result<>(false, "Student does not exist", null);
     }
 
     /**
@@ -151,5 +158,33 @@ public class StudentDao {
         }
 
         return new Result<>(false, "Update failed", null);
+    }
+
+    public static Double getAveragePublisherScore(Long studentId) {
+        if (studentId == null) return null;
+        Cursor cursor = SqliteUtils.getInstance().getReadableDatabase().rawQuery(
+            "SELECT AVG(runner_score) FROM tb_order WHERE student_id = ? AND runner_score IS NOT NULL",
+            new String[]{String.valueOf(studentId)});
+        Double avg = null;
+        if (cursor.moveToFirst()) {
+            avg = cursor.isNull(0) ? null : cursor.getDouble(0);
+        }
+        android.util.Log.d("StudentDao", "getAveragePublisherScore (被评分) studentId=" + studentId + ", avg=" + avg);
+        cursor.close();
+        return avg;
+    }
+
+    public static Double getAverageRunnerScore(Long studentId) {
+        if (studentId == null) return null;
+        Cursor cursor = SqliteUtils.getInstance().getReadableDatabase().rawQuery(
+            "SELECT AVG(publisher_score) FROM tb_order WHERE runner_id = ? AND publisher_score IS NOT NULL",
+            new String[]{String.valueOf(studentId)});
+        Double avg = null;
+        if (cursor.moveToFirst()) {
+            avg = cursor.isNull(0) ? null : cursor.getDouble(0);
+        }
+        android.util.Log.d("StudentDao", "getAverageRunnerScore (被评分) studentId=" + studentId + ", avg=" + avg);
+        cursor.close();
+        return avg;
     }
 }

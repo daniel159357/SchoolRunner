@@ -10,6 +10,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +57,11 @@ public class CreateOrderActivity extends AppCompatActivity {
     private final double MAX_PRICE = 50.0;
     // Price step
     private final double PRICE_STEP = 1.0;
+
+    // 1. 声明RadioGroup runnerLimitRadioGroup，RadioButton rbAll, rbNewOrHigh, rbHighOnly，EditText minRunnerScoreEditText
+    private RadioGroup runnerLimitRadioGroup;
+    private RadioButton rbAll, rbNewOrHigh, rbHighOnly;
+    private EditText minRunnerScoreEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +123,13 @@ public class CreateOrderActivity extends AppCompatActivity {
 
         // Initialize price display
         updatePriceView();
+
+        // 2. 在initView()中findViewById
+        runnerLimitRadioGroup = findViewById(R.id.rg_runner_limit);
+        rbAll = findViewById(R.id.rb_all);
+        rbNewOrHigh = findViewById(R.id.rb_new_or_high);
+        rbHighOnly = findViewById(R.id.rb_high_only);
+        minRunnerScoreEditText = findViewById(R.id.et_min_runner_score);
     }
 
     private void initListener() {
@@ -216,6 +230,16 @@ public class CreateOrderActivity extends AppCompatActivity {
                 if (validateInput()) {
                     createOrder();
                 }
+            }
+        });
+
+        // 在initListener()或initView()中添加：
+        runnerLimitRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.rb_new_or_high || checkedId == R.id.rb_high_only) {
+                minRunnerScoreEditText.setVisibility(View.VISIBLE);
+            } else {
+                minRunnerScoreEditText.setVisibility(View.GONE);
+                minRunnerScoreEditText.setText("");
             }
         });
     }
@@ -334,6 +358,35 @@ public class CreateOrderActivity extends AppCompatActivity {
             deliveryTime.setSeconds(59);
         }
         order.setDeliveryTime(deliveryTime);
+
+        // 3. 在createOrder()中读取并写入order.setOnlyNewRunner/MinRunnerScore
+        int limitType = 0;
+        if (rbAll.isChecked()) limitType = 0;
+        else if (rbNewOrHigh.isChecked()) limitType = 1;
+        else if (rbHighOnly.isChecked()) limitType = 2;
+        order.setRunnerLimitType(limitType);
+        if (limitType == 1 || limitType == 2) {
+            String minRunnerScore = minRunnerScoreEditText.getText().toString();
+            if (!TextUtils.isEmpty(minRunnerScore)) {
+                try {
+                    double score = Double.parseDouble(minRunnerScore);
+                    if (score >= 0 && score <= 5) {
+                        order.setMinRunnerScore(score);
+                    } else {
+                        Toast.makeText(this, "Min runner score must be between 0 and 5", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Invalid min runner score", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } else {
+                Toast.makeText(this, "Please enter min runner score", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } else {
+            order.setMinRunnerScore(null);
+        }
 
         // Call DAO to create order
         Result<Order> result = OrderDao.createOrder(order);

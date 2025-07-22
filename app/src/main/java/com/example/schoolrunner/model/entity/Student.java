@@ -10,6 +10,9 @@ public class Student {
 
     private String name;
 
+    private Double averagePublisherScore; // 作为发布人的平均分
+    private Double averageRunnerScore; // 作为接单人的平均分
+
     public Long getId() {
         return id;
     }
@@ -40,5 +43,18 @@ public class Student {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Double getAveragePublisherScore() {
+        return averagePublisherScore;
+    }
+    public void setAveragePublisherScore(Double averagePublisherScore) {
+        this.averagePublisherScore = averagePublisherScore;
+    }
+    public Double getAverageRunnerScore() {
+        return averageRunnerScore;
+    }
+    public void setAverageRunnerScore(Double averageRunnerScore) {
+        this.averageRunnerScore = averageRunnerScore;
     }
 }

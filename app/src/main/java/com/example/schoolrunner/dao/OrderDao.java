@@ -62,6 +62,18 @@ public class OrderDao {
         }
         values.put("price", order.getPrice());
         values.put("status", order.getStatus());
+        if (order.getReceivedTime() != null) {
+            values.put("received_time", DateUtils.format(order.getReceivedTime()));
+        }
+        if (order.getCompletedTime() != null) {
+            values.put("completed_time", DateUtils.format(order.getCompletedTime()));
+        }
+        if (order.getPublisherScore() != null) values.put("publisher_score", order.getPublisherScore());
+        if (!TextUtils.isEmpty(order.getPublisherComment())) values.put("publisher_comment", order.getPublisherComment());
+        if (order.getRunnerScore() != null) values.put("runner_score", order.getRunnerScore());
+        if (!TextUtils.isEmpty(order.getRunnerComment())) values.put("runner_comment", order.getRunnerComment());
+        if (order.getRunnerLimitType() != null) values.put("runner_limit_type", order.getRunnerLimitType());
+        if (order.getMinRunnerScore() != null) values.put("min_runner_score", order.getMinRunnerScore());
 
         long id = SqliteUtils.getInstance().getWritableDatabase().insert("tb_order", null, values);
         if (id > 0) {
@@ -197,9 +209,10 @@ public class OrderDao {
 
         Order order = orderResult.getData();
 
-        if (Objects.equals(order.getStudentId(), runnerId)) {
-            return new Result<>(false, "Cannot receive your own order", null);
-        }
+        // 移除不能接自己单子的限制
+        // if (Objects.equals(order.getStudentId(), runnerId)) {
+        //     return new Result<>(false, "Cannot receive your own order", null);
+        // }
 
         // Check status update logic
         if (status == OrderStatusEnum.RECEIVED.getCode() && runnerId == null) {
@@ -209,9 +222,32 @@ public class OrderDao {
         ContentValues values = new ContentValues();
         values.put("status", status);
 
-        // If it's a receive order status, update the runner ID
+        // If it's a receive order status, update the runner ID and received_time
         if (status == OrderStatusEnum.RECEIVED.getCode() && runnerId != null) {
             values.put("runner_id", runnerId);
+            values.put("received_time", DateUtils.format(new java.util.Date()));
+            Student runner = StudentDao.getByStudentId(runnerId).getData();
+            if (order.getRunnerLimitType() != null) {
+                if (order.getRunnerLimitType() == 1) {
+                    // 新人或高分
+                    if (runner.getAverageRunnerScore() == null) {
+                        // 新人允许
+                    } else if (order.getMinRunnerScore() != null && runner.getAverageRunnerScore() >= order.getMinRunnerScore()) {
+                        // 高分允许
+                    } else {
+                        return new Result<>(false, "Only new runners (no grade) or runners with score >= " + order.getMinRunnerScore() + " can accept this order", null);
+                    }
+                } else if (order.getRunnerLimitType() == 2) {
+                    // 仅高分
+                    if (runner.getAverageRunnerScore() == null || order.getMinRunnerScore() == null || runner.getAverageRunnerScore() < order.getMinRunnerScore()) {
+                        return new Result<>(false, "Only runners with score >= " + order.getMinRunnerScore() + " can accept this order", null);
+                    }
+                }
+            }
+        }
+        // If it's a complete order status, update completed_time
+        if (status == OrderStatusEnum.COMPLETED.getCode()) {
+            values.put("completed_time", DateUtils.format(new java.util.Date()));
         }
 
         int rowsAffected = SqliteUtils.getInstance().getWritableDatabase().update(
@@ -287,6 +323,30 @@ public class OrderDao {
     }
 
     /**
+     * 更新订单评价
+     */
+    public static Result<Order> updateOrderRating(Long orderId, boolean isPublisher, Double score, String comment) {
+        if (orderId == null || score == null) {
+            return new Result<>(false, "Order ID and score cannot be null", null);
+        }
+        ContentValues values = new ContentValues();
+        if (isPublisher) {
+            values.put("publisher_score", score);
+            values.put("publisher_comment", comment);
+        } else {
+            values.put("runner_score", score);
+            values.put("runner_comment", comment);
+        }
+        int rowsAffected = SqliteUtils.getInstance().getWritableDatabase().update(
+                "tb_order", values, "id=?", new String[]{String.valueOf(orderId)});
+        if (rowsAffected > 0) {
+            // 返回最新订单对象
+            return getOrderById(orderId);
+        }
+        return new Result<>(false, "Order rating update failed", null);
+    }
+
+    /**
      * Extract order from cursor
      */
     private static Order extractOrderFromCursor(Cursor cursor) {
@@ -325,6 +385,31 @@ public class OrderDao {
         if (!TextUtils.isEmpty(createTimeStr)) {
             order.setCreateTime(DateUtils.parse(createTimeStr));
         }
+
+        String receivedTimeStr = cursor.getColumnIndex("received_time") != -1 ? cursor.getString(cursor.getColumnIndex("received_time")) : null;
+        if (!TextUtils.isEmpty(receivedTimeStr)) {
+            order.setReceivedTime(DateUtils.parse(receivedTimeStr));
+        }
+        String completedTimeStr = cursor.getColumnIndex("completed_time") != -1 ? cursor.getString(cursor.getColumnIndex("completed_time")) : null;
+        if (!TextUtils.isEmpty(completedTimeStr)) {
+            order.setCompletedTime(DateUtils.parse(completedTimeStr));
+        }
+
+        int publisherScoreIndex = cursor.getColumnIndex("publisher_score");
+        if (publisherScoreIndex != -1 && !cursor.isNull(publisherScoreIndex)) order.setPublisherScore(cursor.getDouble(publisherScoreIndex));
+        int runnerScoreIndex = cursor.getColumnIndex("runner_score");
+        if (runnerScoreIndex != -1 && !cursor.isNull(runnerScoreIndex)) order.setRunnerScore(cursor.getDouble(runnerScoreIndex));
+        int publisherCommentIndex = cursor.getColumnIndex("publisher_comment");
+        if (publisherCommentIndex != -1 && !cursor.isNull(publisherCommentIndex)) order.setPublisherComment(cursor.getString(publisherCommentIndex));
+        int runnerCommentIndex = cursor.getColumnIndex("runner_comment");
+        if (runnerCommentIndex != -1 && !cursor.isNull(runnerCommentIndex)) order.setRunnerComment(cursor.getString(runnerCommentIndex));
+
+        int runnerLimitTypeIndex = cursor.getColumnIndex("runner_limit_type");
+        if (runnerLimitTypeIndex != -1 && !cursor.isNull(runnerLimitTypeIndex)) order.setRunnerLimitType(cursor.getInt(runnerLimitTypeIndex));
+        int minRunnerScoreIndex = cursor.getColumnIndex("min_runner_score");
+        if (minRunnerScoreIndex != -1 && !cursor.isNull(minRunnerScoreIndex)) order.setMinRunnerScore(cursor.getDouble(minRunnerScoreIndex));
+
+        // 在createOrder、updateOrder、extractOrderFromCursor等方法中，处理publisherScore、publisherComment、runnerScore、runnerComment字段的读写
 
         // Query student information
         Result<Student> studentResult = StudentDao.getByStudentId(order.getStudentId());

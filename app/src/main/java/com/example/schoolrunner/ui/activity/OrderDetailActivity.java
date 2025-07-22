@@ -11,6 +11,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.RatingBar;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -50,9 +53,15 @@ public class OrderDetailActivity extends AppCompatActivity {
     private Button btnCall;
     private TextView tvPriceBottom;
     private Button btnReceiveOrder;
+    private TextView tvOrderDuration; // 新增用时显示控件
+    private RatingBar ratingBarPublisher, ratingBarRunner;
+    private TextView tvPublisherGrade, tvPublisherComment, tvRunnerGrade, tvRunnerComment;
+    private EditText etPublisherComment, etRunnerComment;
+    private Button btnSubmitPublisher, btnSubmitRunner;
 
     private Long orderId;
     private Order order;
+    private String viewRole;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +75,8 @@ public class OrderDetailActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        viewRole = getIntent().getStringExtra("viewRole");
 
         initView();
         initListener();
@@ -94,6 +105,14 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvPriceBottom = findViewById(R.id.tv_price_bottom);
         btnCall = findViewById(R.id.btn_call);
         btnReceiveOrder = findViewById(R.id.btn_receive_order);
+        tvOrderDuration = findViewById(R.id.tv_order_duration); // 初始化用时控件
+        ratingBarPublisher = findViewById(R.id.rating_bar_publisher);
+        tvPublisherGrade = findViewById(R.id.tv_publisher_grade);
+        tvPublisherComment = findViewById(R.id.tv_publisher_comment);
+        ratingBarRunner = findViewById(R.id.rating_bar_runner);
+        tvRunnerGrade = findViewById(R.id.tv_runner_grade);
+        tvRunnerComment = findViewById(R.id.tv_runner_comment);
+        // 不要findViewById动态输入控件
     }
 
     /**
@@ -282,6 +301,154 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         // Set bottom price
         tvPriceBottom.setText("¥" + order.getPrice());
+
+        // 显示用时
+        if (order.getReceivedTime() != null && order.getCompletedTime() != null) {
+            long durationMs = order.getCompletedTime().getTime() - order.getReceivedTime().getTime();
+            long minutes = durationMs / (1000 * 60);
+            long hours = minutes / 60;
+            long remainMinutes = minutes % 60;
+            String durationStr = (hours > 0 ? hours + "h " : "") + remainMinutes + "min";
+            tvOrderDuration.setText("Duration: " + durationStr);
+            tvOrderDuration.setVisibility(View.VISIBLE);
+        } else {
+            tvOrderDuration.setVisibility(View.GONE);
+        }
+
+        // 评价区逻辑
+        Student currentStudent = null;
+        try {
+            currentStudent = CurrentStudentUtils.getCurrentStudent();
+        } catch (Exception e) {
+            return;
+        }
+        boolean isPublisher = currentStudent != null && currentStudent.getId().equals(order.getStudentId());
+        boolean isRunner = currentStudent != null && order.getRunnerId() != null && currentStudent.getId().equals(order.getRunnerId());
+        // Publisher grade
+        if (order.getPublisherScore() != null) {
+            ratingBarPublisher.setRating(order.getPublisherScore().floatValue());
+            tvPublisherGrade.setText(String.format("%.1f", order.getPublisherScore()));
+        } else {
+            ratingBarPublisher.setRating(0f);
+            tvPublisherGrade.setText("no grade");
+        }
+        // Publisher comment
+        tvPublisherComment.setText(order.getPublisherComment() == null ? "" : order.getPublisherComment());
+        // Runner grade
+        if (order.getRunnerScore() != null) {
+            ratingBarRunner.setRating(order.getRunnerScore().floatValue());
+            tvRunnerGrade.setText(String.format("%.1f", order.getRunnerScore()));
+        } else {
+            ratingBarRunner.setRating(0f);
+            tvRunnerGrade.setText("no grade");
+        }
+        // Runner comment
+        tvRunnerComment.setText(order.getRunnerComment() == null ? "" : order.getRunnerComment());
+        // 动态插入输入控件
+        LinearLayout layoutOrderEvaluation = findViewById(R.id.layout_order_evaluation);
+        // 先移除已有的输入控件
+        if (etPublisherComment != null) layoutOrderEvaluation.removeView(etPublisherComment);
+        if (btnSubmitPublisher != null) layoutOrderEvaluation.removeView(btnSubmitPublisher);
+        if (etRunnerComment != null) layoutOrderEvaluation.removeView(etRunnerComment);
+        if (btnSubmitRunner != null) layoutOrderEvaluation.removeView(btnSubmitRunner);
+        // 订单完成后，允许评价
+        boolean canPublisherRate = "publisher".equals(viewRole);
+        boolean canRunnerRate = "runner".equals(viewRole);
+        if (order.getStatus() == OrderStatusEnum.COMPLETED.getCode()) {
+            if (canPublisherRate && isPublisher && order.getPublisherScore() == null) {
+                // 动态查找publisher comment的索引
+                int publisherCommentIndex = -1;
+                for (int i = 0; i < layoutOrderEvaluation.getChildCount(); i++) {
+                    View v = layoutOrderEvaluation.getChildAt(i);
+                    if (v.getId() == R.id.tv_publisher_comment) {
+                        publisherCommentIndex = i;
+                        break;
+                    }
+                }
+                if (publisherCommentIndex != -1) {
+                    layoutOrderEvaluation.removeViewAt(publisherCommentIndex);
+                    etPublisherComment = new EditText(this);
+                    etPublisherComment.setHint("Write your comment...");
+                    etPublisherComment.setTextSize(14f);
+                    btnSubmitPublisher = new Button(this);
+                    btnSubmitPublisher.setText("Submit publisher rating");
+                    btnSubmitPublisher.setOnClickListener(v -> {
+                        double score = ratingBarPublisher.getRating();
+                        String comment = etPublisherComment.getText().toString();
+                        OrderDao.updateOrderRating(order.getId(), true, score, comment);
+                        loadOrderDetail();
+                    });
+                    layoutOrderEvaluation.addView(etPublisherComment, publisherCommentIndex);
+                    layoutOrderEvaluation.addView(btnSubmitPublisher, publisherCommentIndex + 1);
+                } else {
+                    // 找不到就加到最后
+                    etPublisherComment = new EditText(this);
+                    etPublisherComment.setHint("Write your comment...");
+                    etPublisherComment.setTextSize(14f);
+                    btnSubmitPublisher = new Button(this);
+                    btnSubmitPublisher.setText("Submit publisher rating");
+                    btnSubmitPublisher.setOnClickListener(v -> {
+                        double score = ratingBarPublisher.getRating();
+                        String comment = etPublisherComment.getText().toString();
+                        OrderDao.updateOrderRating(order.getId(), true, score, comment);
+                        loadOrderDetail();
+                    });
+                    layoutOrderEvaluation.addView(etPublisherComment);
+                    layoutOrderEvaluation.addView(btnSubmitPublisher);
+                }
+                ratingBarPublisher.setIsIndicator(false);
+            } else {
+                ratingBarPublisher.setIsIndicator(true);
+            }
+            if (canRunnerRate && isRunner && order.getRunnerScore() == null) {
+                // 动态查找runner comment的索引
+                int runnerCommentIndex = -1;
+                for (int i = 0; i < layoutOrderEvaluation.getChildCount(); i++) {
+                    View v = layoutOrderEvaluation.getChildAt(i);
+                    if (v.getId() == R.id.tv_runner_comment) {
+                        runnerCommentIndex = i;
+                        break;
+                    }
+                }
+                if (runnerCommentIndex != -1) {
+                    layoutOrderEvaluation.removeViewAt(runnerCommentIndex);
+                    etRunnerComment = new EditText(this);
+                    etRunnerComment.setHint("Write your comment...");
+                    etRunnerComment.setTextSize(14f);
+                    btnSubmitRunner = new Button(this);
+                    btnSubmitRunner.setText("Submit runner rating");
+                    btnSubmitRunner.setOnClickListener(v -> {
+                        double score = ratingBarRunner.getRating();
+                        String comment = etRunnerComment.getText().toString();
+                        OrderDao.updateOrderRating(order.getId(), false, score, comment);
+                        loadOrderDetail();
+                    });
+                    layoutOrderEvaluation.addView(etRunnerComment, runnerCommentIndex);
+                    layoutOrderEvaluation.addView(btnSubmitRunner, runnerCommentIndex + 1);
+                } else {
+                    // 找不到就加到最后
+                    etRunnerComment = new EditText(this);
+                    etRunnerComment.setHint("Write your comment...");
+                    etRunnerComment.setTextSize(14f);
+                    btnSubmitRunner = new Button(this);
+                    btnSubmitRunner.setText("Submit runner rating");
+                    btnSubmitRunner.setOnClickListener(v -> {
+                        double score = ratingBarRunner.getRating();
+                        String comment = etRunnerComment.getText().toString();
+                        OrderDao.updateOrderRating(order.getId(), false, score, comment);
+                        loadOrderDetail();
+                    });
+                    layoutOrderEvaluation.addView(etRunnerComment);
+                    layoutOrderEvaluation.addView(btnSubmitRunner);
+                }
+                ratingBarRunner.setIsIndicator(false);
+            } else {
+                ratingBarRunner.setIsIndicator(true);
+            }
+        } else {
+            ratingBarPublisher.setIsIndicator(true);
+            ratingBarRunner.setIsIndicator(true);
+        }
     }
 
     /**
@@ -311,6 +478,15 @@ public class OrderDetailActivity extends AppCompatActivity {
             // Refresh UI
             order = result.getData();
             updateOrderUI();
+            // 如果是确认完成，显示用时
+            if (order.getReceivedTime() != null && order.getCompletedTime() != null) {
+                long durationMs = order.getCompletedTime().getTime() - order.getReceivedTime().getTime();
+                long minutes = durationMs / (1000 * 60);
+                long hours = minutes / 60;
+                long remainMinutes = minutes % 60;
+                String durationStr = (hours > 0 ? hours + "h " : "") + remainMinutes + "min";
+                Toast.makeText(this, "Order completed in " + durationStr, Toast.LENGTH_LONG).show();
+            }
         } else {
             Toast.makeText(this, "Failed to receive order: " + result.getMessage(), Toast.LENGTH_SHORT).show();
         }

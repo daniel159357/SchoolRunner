@@ -36,8 +36,16 @@ public class SqliteUtils extends SQLiteOpenHelper {
                     "delivery_time TIMESTAMP," +
                     "price REAL NOT NULL," +
                     "status INTEGER NOT NULL," +
+                    "received_time TIMESTAMP," +
+                    "completed_time TIMESTAMP," +
                     "create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
-                    "update_time TIMESTAMP" +
+                    "update_time TIMESTAMP," +
+                    "publisher_score REAL," +
+                    "publisher_comment TEXT," +
+                    "runner_score REAL," +
+                    "runner_comment TEXT," +
+                    "runner_limit_type INTEGER DEFAULT 0," +
+                    "min_runner_score REAL" +
                     ")";
 
 
@@ -45,7 +53,7 @@ public class SqliteUtils extends SQLiteOpenHelper {
     private SQLiteDatabase db;
 
     public SqliteUtils() {
-        super(AppUtils.getApplication(), "school_runner.db", null, 4);
+        super(AppUtils.getApplication(), "school_runner.db", null, 8); // 升级版本号
     }
 
     /**
@@ -74,11 +82,25 @@ public class SqliteUtils extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         this.db = db;
-        // Delete table
-        db.execSQL("DROP TABLE IF EXISTS tb_student");
-        db.execSQL("DROP TABLE IF EXISTS tb_order");
-        // Recreate table
-        onCreate(db);
+        if (oldVersion < 4) {
+            // 只添加不存在的字段
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN received_time TIMESTAMP");
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN completed_time TIMESTAMP");
+        }
+        if (oldVersion < 6) {
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN publisher_score REAL");
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN publisher_comment TEXT");
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN runner_score REAL");
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN runner_comment TEXT");
+        }
+        if (oldVersion < 7) {
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN only_new_runner INTEGER DEFAULT 0");
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN min_runner_score REAL");
+        }
+        if (oldVersion < 8) {
+            db.execSQL("ALTER TABLE tb_order ADD COLUMN runner_limit_type INTEGER DEFAULT 0");
+        }
+        // 其他升级逻辑...
     }
 
     @Override

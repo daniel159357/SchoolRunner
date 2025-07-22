@@ -297,6 +297,131 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
+                <!-- Duration info -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Duration"
+                        android:textColor="#999999"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tv_order_duration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#333333"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- 在订单详情信息区添加四行评价内容 -->
+                <LinearLayout
+                    android:id="@+id/layout_order_evaluation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="120dp"
+                            android:layout_height="wrap_content"
+                            android:text="Publisher grade: "
+                            android:textColor="#666"
+                            android:textSize="14sp"/>
+                        <RatingBar
+                            android:id="@+id/rating_bar_publisher"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:numStars="5"
+                            android:stepSize="0.5"
+                            android:isIndicator="true"
+                            android:layout_marginEnd="8dp"
+                            style="?android:attr/ratingBarStyleSmall" />
+                        <TextView
+                            android:id="@+id/tv_publisher_grade"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="no grade"
+                            android:textColor="#333"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="120dp"
+                            android:layout_height="wrap_content"
+                            android:text="Publisher comment: "
+                            android:textColor="#666"
+                            android:textSize="14sp"/>
+                        <TextView
+                            android:id="@+id/tv_publisher_comment"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="#333"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="120dp"
+                            android:layout_height="wrap_content"
+                            android:text="Runner grade: "
+                            android:textColor="#666"
+                            android:textSize="14sp"/>
+                        <RatingBar
+                            android:id="@+id/rating_bar_runner"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:numStars="5"
+                            android:stepSize="0.5"
+                            android:isIndicator="true"
+                            android:layout_marginEnd="8dp"
+                            style="?android:attr/ratingBarStyleSmall" />
+                        <TextView
+                            android:id="@+id/tv_runner_grade"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="no grade"
+                            android:textColor="#333"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="120dp"
+                            android:layout_height="wrap_content"
+                            android:text="Runner comment: "
+                            android:textColor="#666"
+                            android:textSize="14sp"/>
+                        <TextView
+                            android:id="@+id/tv_runner_comment"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="#333"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+                <!-- 评价输入控件将在OrderDetailActivity中动态插入 -->
+
                 <!-- Order creation time -->
                 <TextView
                     android:id="@+id/tv_create_time"
@@ -313,6 +438,10 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- 评价区 -->
+    <!-- 删除顶部悬浮的评价区，只保留四行静态展示区 -->
+    <!-- 删除id为layout_rating_section、rating_bar、et_comment、btn_submit_rating、tv_rating_title的相关布局 -->
 
     <!-- Bottom action bar -->
     <LinearLayout
